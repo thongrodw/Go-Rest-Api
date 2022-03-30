@@ -5,6 +5,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func main(){
+
+	gin.SetMode(gin.ReleaseMode)
+	
+	r := gin.New()
+
+	r.GET("/", indexHandler)
+	r.GET("/books", getBookHandler)
+	r.POST("/books", createBookHandler)
+
+	r.Run()
+
+}
+
 type Book struct {
 	ID string `json:"id"`
 	Title string `json:"title"`
@@ -17,21 +31,28 @@ var books = []Book{
 	{ID: "3", Title: "The Wizard of Oz", Author: "L. Frank Baum"},
 }
 
-func main(){
-
-	gin.SetMode(gin.ReleaseMode)
-	r := gin.New()
-
-	r.GET("/", func(c *gin.Context){
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Hello Game",
-		})
+func indexHandler(c *gin.Context){
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Hello World!",
 	})
-
-	r.GET("/books", func(c *gin.Context){
-		c.JSON(http.StatusOK, books)
-	})
-
-	r.Run()
-
 }
+
+func getBookHandler(c *gin.Context){
+	c.JSON(http.StatusOK, books)
+}
+
+func createBookHandler(c *gin.Context) {
+	var book Book
+
+	if err := c.ShouldBindJSON(&book); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	books = append(books, book)
+
+	c.JSON(http.StatusCreated, book)
+}
+
